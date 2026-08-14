@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,4 +5,113 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  INVIGILATOR
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+model Institute {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  emailDomain String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  students    Student[]
+  staff       Staff[]
+  invitations Invitation[]
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  role         UserRole
+  status       UserStatus @default(PENDING)
+  instituteId  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  institute   Institute?   @relation(fields: [instituteId], references: [id])
+  student     Student?
+  staff       Staff?
+  invitations Invitation[]
+
+  @@index([instituteId])
+}
+
+model Student {
+  id                 String  @id @default(cuid())
+  studentNumber      String
+  name               String
+  institutionalEmail String
+  department         String?
+  year               Int?
+  className          String?
+
+  instituteId String
+  userId      String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  institute Institute @relation(fields: [instituteId], references: [id])
+  user      User?     @relation(fields: [userId], references: [id])
+
+  @@unique([instituteId, studentNumber])
+  @@index([instituteId])
+  @@index([institutionalEmail])
+}
+
+model Staff {
+  id             String  @id @default(cuid())
+  employeeNumber String?
+  name           String
+  department     String?
+
+  instituteId String
+  userId      String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  institute Institute @relation(fields: [instituteId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@unique([instituteId, employeeNumber])
+  @@index([instituteId])
+}
+
+model Invitation {
+  id        String    @id @default(cuid())
+  email     String
+  role      UserRole
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  instituteId String
+  invitedById String
+
+  createdAt DateTime @default(now())
+
+  institute Institute @relation(fields: [instituteId], references: [id])
+  invitedBy User      @relation(fields: [invitedById], references: [id])
+
+  @@index([email])
+  @@index([instituteId])
 }
