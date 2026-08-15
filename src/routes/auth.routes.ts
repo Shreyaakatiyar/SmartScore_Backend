@@ -3,6 +3,7 @@ import {
   login,
   getCurrentUser,
   refresh,
+  logout,
 } from "../controllers/auth.controller";
 import { authenticate } from "../middleware/auth.middleware";
 
@@ -17,5 +18,7 @@ router.get(
 );
 
 router.post("/refresh", refresh);
+
+router.post("/logout", logout);
 
 export default router;

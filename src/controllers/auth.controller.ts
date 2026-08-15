@@ -117,3 +117,38 @@ export const refresh = async (
     });
   }
 };
+
+export const logout = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const parsed = refreshTokenSchema.safeParse(
+      req.body
+    );
+
+    if (!parsed.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request data",
+        errors: parsed.error.flatten(),
+      });
+    }
+
+    await authService.logout(
+      parsed.data.refreshToken
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Logout successful",
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};

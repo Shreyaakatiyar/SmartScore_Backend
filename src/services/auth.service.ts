@@ -167,3 +167,40 @@ export const refresh = async (
     refreshToken: newRefreshToken.token,
   };
 };
+
+export const logout = async (
+  refreshToken: string
+) => {
+  let payload;
+
+  try {
+    payload = verifyRefreshToken(refreshToken);
+  } catch {
+    
+    return;
+  }
+
+  const tokenRecord =
+    await prisma.refreshToken.findUnique({
+      where: {
+        jti: payload.jti,
+      },
+    });
+
+  if (!tokenRecord) {
+    return;
+  }
+
+  if (tokenRecord.revokedAt) {
+    return;
+  }
+
+  await prisma.refreshToken.update({
+    where: {
+      id: tokenRecord.id,
+    },
+    data: {
+      revokedAt: new Date(),
+    },
+  });
+};
