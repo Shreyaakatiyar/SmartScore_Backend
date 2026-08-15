@@ -18,38 +18,87 @@ const prisma = new PrismaClient({
 });
 
 const main = async () => {
-  const email = process.env.ADMIN_EMAIL;
-  const password = process.env.ADMIN_PASSWORD;
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
 
-  if (!email || !password) {
+  const studentEmail = process.env.TEST_STUDENT_EMAIL;
+  const studentPassword = process.env.TEST_STUDENT_PASSWORD;
+
+  if (!adminEmail || !adminPassword) {
     throw new Error(
       "ADMIN_EMAIL and ADMIN_PASSWORD must be defined in .env"
     );
   }
 
+  if (!studentEmail || !studentPassword) {
+    throw new Error(
+      "TEST_STUDENT_EMAIL and TEST_STUDENT_PASSWORD must be defined in .env"
+    );
+  }
+
+  // -------------------------
+  // Create Admin
+  // -------------------------
+
   const existingAdmin = await prisma.user.findUnique({
     where: {
-      email,
+      email: adminEmail,
     },
   });
 
   if (existingAdmin) {
-    console.log(`Admin already exists: ${email}`);
-    return;
+    console.log(`Admin already exists: ${adminEmail}`);
+  } else {
+    const adminPasswordHash = await hashPassword(
+      adminPassword
+    );
+
+    const admin = await prisma.user.create({
+      data: {
+        email: adminEmail,
+        passwordHash: adminPasswordHash,
+        role: "PLATFORM_ADMIN",
+        status: "ACTIVE",
+      },
+    });
+
+    console.log(
+      `Admin created successfully: ${admin.email}`
+    );
   }
 
-  const passwordHash = await hashPassword(password);
+  // -------------------------
+  // Create Test Student
+  // -------------------------
 
-  const admin = await prisma.user.create({
-    data: {
-      email,
-      passwordHash,
-      role: "ADMIN",
-      status: "ACTIVE",
+  const existingStudent = await prisma.user.findUnique({
+    where: {
+      email: studentEmail,
     },
   });
 
-  console.log(`Admin created successfully: ${admin.email}`);
+  if (existingStudent) {
+    console.log(
+      `Test student already exists: ${studentEmail}`
+    );
+  } else {
+    const studentPasswordHash = await hashPassword(
+      studentPassword
+    );
+
+    const student = await prisma.user.create({
+      data: {
+        email: studentEmail,
+        passwordHash: studentPasswordHash,
+        role: "STUDENT",
+        status: "ACTIVE",
+      },
+    });
+
+    console.log(
+      `Test student created successfully: ${student.email}`
+    );
+  }
 };
 
 main()

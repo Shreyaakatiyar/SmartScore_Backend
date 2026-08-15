@@ -11,7 +11,8 @@ enum UserRole {
   STUDENT
   TEACHER
   INVIGILATOR
-  ADMIN
+  INSTITUTION_ADMIN
+  PLATFORM_ADMIN
 }
 
 enum UserStatus {
@@ -21,13 +22,21 @@ enum UserStatus {
   DEACTIVATED
 }
 
+enum InstituteStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
 model Institute {
-  id          String   @id @default(cuid())
+  id          String          @id @default(cuid())
   name        String
-  code        String   @unique
+  code        String          @unique
   emailDomain String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  status      InstituteStatus @default(PENDING)
 
   users       User[]
   students    Student[]
