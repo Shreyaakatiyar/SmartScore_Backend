@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   login,
   getCurrentUser,
+  refresh,
 } from "../controllers/auth.controller";
 import { authenticate } from "../middleware/auth.middleware";
 
@@ -14,5 +15,7 @@ router.get(
   authenticate,
   getCurrentUser
 );
+
+router.post("/refresh", refresh);
 
 export default router;

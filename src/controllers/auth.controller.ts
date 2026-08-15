@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { loginSchema } from "../validators/auth.validator";
 import * as authService from "../services/auth.service";
+import { refreshTokenSchema } from "../validators/auth.validator";
 
 export const login = async (
   req: Request,
@@ -67,4 +68,52 @@ export const getCurrentUser = (
       user: req.user,
     },
   });
+};
+
+export const refresh = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const parsed = refreshTokenSchema.safeParse(
+      req.body
+    );
+
+    if (!parsed.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request data",
+        errors: parsed.error.flatten(),
+      });
+    }
+
+    const result = await authService.refresh(
+      parsed.data
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Token refreshed successfully",
+      data: result,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Token refresh failed";
+
+    if (
+      message === "Account is not active"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message,
+      });
+    }
+
+    return res.status(401).json({
+      success: false,
+      message,
+    });
+  }
 };
