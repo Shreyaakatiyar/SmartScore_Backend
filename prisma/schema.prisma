@@ -46,10 +46,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  institute   Institute?   @relation(fields: [instituteId], references: [id])
-  student     Student?
-  staff       Staff?
-  invitations Invitation[]
+  institute     Institute?     @relation(fields: [instituteId], references: [id])
+  student       Student?
+  staff         Staff?
+  invitations   Invitation[]
+  refreshTokens RefreshToken[]
 
   @@index([instituteId])
 }
@@ -114,4 +115,19 @@ model Invitation {
 
   @@index([email])
   @@index([instituteId])
+}
+
+model RefreshToken {
+  id        String @id @default(cuid())
+  jti       String @unique
+  tokenHash String @unique
+  userId    String
+
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

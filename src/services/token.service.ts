@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import crypto from "node:crypto";
 
 const accessSecret = process.env.JWT_ACCESS_SECRET;
 const refreshSecret = process.env.JWT_REFRESH_SECRET;
@@ -18,6 +19,7 @@ export interface AccessTokenPayload {
 
 export interface RefreshTokenPayload {
   sub: string;
+  jti: string;
 }
 
 export const generateAccessToken = (
@@ -36,16 +38,26 @@ export const generateAccessToken = (
   );
 };
 
-export const generateRefreshToken = (userId: string): string => {
-  return jwt.sign(
+export const generateRefreshToken = (
+  userId: string
+): { token: string; jti: string } => {
+  const jti = crypto.randomUUID();
+
+  const token = jwt.sign(
     {
       sub: userId,
     },
     refreshSecret!,
     {
       expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "7d",
+      jwtid: jti,
     } as jwt.SignOptions
   );
+
+  return {
+    token,
+    jti,
+  };
 };
 
 export const verifyAccessToken = (
