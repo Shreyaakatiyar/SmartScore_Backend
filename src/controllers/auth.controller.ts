@@ -1,7 +1,50 @@
 import { Request, Response } from "express";
-import { loginSchema } from "../validators/auth.validator";
+import { loginSchema, registerSchema, refreshTokenSchema } from "../validators/auth.validator";
 import * as authService from "../services/auth.service";
-import { refreshTokenSchema } from "../validators/auth.validator";
+
+export const register = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const parsed = registerSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request data",
+        errors: parsed.error.flatten(),
+      });
+    }
+
+    const result = await authService.register(parsed.data);
+
+    return res.status(201).json({
+      success: true,
+      message: "Registration successful",
+      data: result,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Registration failed";
+
+    if (message === "Email is already registered") {
+      return res.status(409).json({
+        success: false,
+        message,
+      });
+    }
+
+    console.error("Registration error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
 
 export const login = async (
   req: Request,
