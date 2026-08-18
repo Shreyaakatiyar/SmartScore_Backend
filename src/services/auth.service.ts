@@ -7,8 +7,57 @@ import {
   generateRefreshToken,
   verifyRefreshToken,
 } from "./token.service";
-import type { LoginInput, RefreshTokenInput, } from "../validators/auth.validator";
+import type { LoginInput, RefreshTokenInput, RegisterInput } from "../validators/auth.validator";
 import { hashPassword } from "./password.service";
+
+export const register = async (input: RegisterInput) => {
+  const existingUser = await prisma.user.findUnique({
+    where: {
+      email: input.email,
+    },
+  });
+
+  if (existingUser) {
+    throw new Error("Email is already registered");
+  }
+
+  const passwordHash = await hashPassword(input.password);
+
+  const user = await prisma.user.create({
+    data: {
+      email: input.email,
+      passwordHash,
+      role: input.role || "STUDENT",
+      status: "ACTIVE",
+      instituteId: input.instituteId || null,
+    },
+  });
+
+  const accessToken = generateAccessToken(user.id, user.role);
+  const refreshTokenResult = generateRefreshToken(user.id);
+  const refreshTokenHash = await hashPassword(refreshTokenResult.token);
+
+  await prisma.refreshToken.create({
+    data: {
+      jti: refreshTokenResult.jti,
+      tokenHash: refreshTokenHash,
+      userId: user.id,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    },
+  });
+
+  return {
+    user: {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      instituteId: user.instituteId,
+    },
+    accessToken,
+    refreshToken: refreshTokenResult.token,
+  };
+};
 
 export const login = async (input: LoginInput) => {
   const user = await prisma.user.findUnique({
