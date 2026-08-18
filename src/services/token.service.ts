@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import crypto from "node:crypto";
+import { UserRole } from "../generated/prisma/client";
 
 const accessSecret = process.env.JWT_ACCESS_SECRET;
 const refreshSecret = process.env.JWT_REFRESH_SECRET;
@@ -14,7 +15,7 @@ if (!refreshSecret) {
 
 export interface AccessTokenPayload {
   sub: string;
-  role: "STUDENT" | "TEACHER" | "INVIGILATOR" | "ADMIN";
+  role: UserRole
 }
 
 export interface RefreshTokenPayload {
