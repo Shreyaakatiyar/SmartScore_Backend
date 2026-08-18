@@ -37,6 +37,25 @@ export const register = async (
       });
     }
 
+    if (message === "Institute not found") {
+      return res.status(404).json({
+        success: false,
+        message,
+      });
+    }
+
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      (error as { code: string }).code === "P2003"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid instituteId: Institute does not exist",
+      });
+    }
+
     console.error("Registration error:", error);
 
     return res.status(500).json({

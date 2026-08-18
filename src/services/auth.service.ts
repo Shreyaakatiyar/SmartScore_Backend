@@ -10,6 +10,24 @@ import {
 import type { LoginInput, RefreshTokenInput, RegisterInput } from "../validators/auth.validator";
 import { hashPassword } from "./password.service";
 
+export const getOrCreateDefaultInstitute = async () => {
+  let defaultInstitute = await prisma.institute.findUnique({
+    where: { code: "AKGEC" },
+  });
+
+  if (!defaultInstitute) {
+    defaultInstitute = await prisma.institute.create({
+      data: {
+        name: "Ajay Kumar Garg Engineering College",
+        code: "AKGEC",
+        status: "ACTIVE",
+      },
+    });
+  }
+
+  return defaultInstitute;
+};
+
 export const register = async (input: RegisterInput) => {
   const existingUser = await prisma.user.findUnique({
     where: {
@@ -21,6 +39,23 @@ export const register = async (input: RegisterInput) => {
     throw new Error("Email is already registered");
   }
 
+  let instituteId = input.instituteId;
+
+  if (instituteId) {
+    const institute = await prisma.institute.findUnique({
+      where: {
+        id: instituteId,
+      },
+    });
+
+    if (!institute) {
+      throw new Error("Institute not found");
+    }
+  } else {
+    const defaultInstitute = await getOrCreateDefaultInstitute();
+    instituteId = defaultInstitute.id;
+  }
+
   const passwordHash = await hashPassword(input.password);
 
   const user = await prisma.user.create({
@@ -29,7 +64,7 @@ export const register = async (input: RegisterInput) => {
       passwordHash,
       role: input.role || "STUDENT",
       status: "ACTIVE",
-      instituteId: input.instituteId || null,
+      instituteId,
     },
   });
 
@@ -101,7 +136,7 @@ export const login = async (input: LoginInput) => {
       userId: user.id,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     },
-});
+  });
 
   return {
     user: {
@@ -225,7 +260,7 @@ export const logout = async (
   try {
     payload = verifyRefreshToken(refreshToken);
   } catch {
-    
+
     return;
   }
 

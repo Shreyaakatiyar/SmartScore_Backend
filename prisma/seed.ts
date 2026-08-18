@@ -1,4 +1,4 @@
-import "dotenv/config";
+import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { hashPassword } from "../src/services/password.service";
@@ -9,9 +9,8 @@ if (!connectionString) {
   throw new Error("DATABASE_URL is not defined");
 }
 
-const adapter = new PrismaPg({
-  connectionString,
-});
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
 
 const prisma = new PrismaClient({
   adapter,
@@ -34,6 +33,26 @@ const main = async () => {
     throw new Error(
       "TEST_STUDENT_EMAIL and TEST_STUDENT_PASSWORD must be defined in .env"
     );
+  }
+
+  // -------------------------
+  // Create / Ensure AKGEC Institute
+  // -------------------------
+  let akgec = await prisma.institute.findUnique({
+    where: { code: "AKGEC" },
+  });
+
+  if (!akgec) {
+    akgec = await prisma.institute.create({
+      data: {
+        name: "Ajay Kumar Garg Engineering College",
+        code: "AKGEC",
+        status: "ACTIVE",
+      },
+    });
+    console.log(`Default Institute created: ${akgec.name} (${akgec.code})`);
+  } else {
+    console.log(`Default Institute already exists: ${akgec.name} (${akgec.code})`);
   }
 
   // -------------------------

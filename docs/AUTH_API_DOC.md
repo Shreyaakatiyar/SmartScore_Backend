@@ -62,7 +62,7 @@ Content-Type: application/json
 | `password` | `string` | **Yes** | User password. Minimum 8 characters. |
 | `name` | `string` | No | Full name of the user. |
 | `role` | `string` | No | User role. Options: `"STUDENT"`, `"TEACHER"`, `"INVIGILATOR"`, `"INSTITUTION_ADMIN"`, `"PLATFORM_ADMIN"`. Default: `"STUDENT"`. |
-| `instituteId` | `string` | No | CUID of the associated institute. |
+| `instituteId` | `string` | No | Optional CUID of the associated institute. Defaults automatically to **AKGEC** (`"Ajay Kumar Garg Engineering College"`). |
 
 #### Example Request Body
 ```json
@@ -70,8 +70,7 @@ Content-Type: application/json
   "email": "john.doe@example.com",
   "password": "SecurePassword123!",
   "name": "John Doe",
-  "role": "STUDENT",
-  "instituteId": "cm1234567890abcdef"
+  "role": "STUDENT"
 }
 ```
 
@@ -88,7 +87,7 @@ Content-Type: application/json
       "email": "john.doe@example.com",
       "role": "STUDENT",
       "status": "ACTIVE",
-      "instituteId": "cm1234567890abcdef"
+      "instituteId": "cm_akgec_institute_id"
     },
     "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
